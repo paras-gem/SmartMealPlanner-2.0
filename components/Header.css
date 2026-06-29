@@ -1,0 +1,202 @@
+/* ── HEADER ─────────────────────────────────────── */
+.site-header,
+.glass-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 9000;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2rem;
+    height: 64px;
+    background: var(--bg-nav);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.12);
+    gap: 1rem;
+}
+
+/* ── LOGO ───────────────────────────────────────── */
+
+     .logo{
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--accent);
+    cursor: pointer;
+    letter-spacing: -0.5px;
+    white-space: nowrap;
+    user-select: none;
+    background: linear-gradient(135deg, var(--accent), var(--accent-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* ── NAV LINKS ──────────────────────────────────── */
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 0.2rem;
+    flex: 1;
+    justify-content: center;
+}
+
+.nav-link {
+    padding: 7px 14px;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--text);
+    transition: background 0.2s, color 0.2s;
+    white-space: nowrap;
+    user-select: none;
+}
+
+.nav-link:hover {
+    background: var(--bg-hover);
+    color: var(--accent);
+}
+
+.nav-link.active {
+    background: var(--accent-alpha);
+    color: var(--accent);
+}
+
+.premium-link {
+    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+    color: #ffffff !important;
+    border-radius: 20px;
+    padding: 7px 16px;
+    text-shadow: 0 1px 5px rgba(213, 173, 173, 0.7) !important;
+    font-weight: 800;
+}
+
+.premium-link:hover {
+    filter: brightness(1.1);
+    color: var(--btn-text) !important;
+}
+
+/* ── HEADER ACTIONS ─────────────────────────────── */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-shrink: 0;
+}
+
+/* ── LANGUAGE SELECTOR ──────────────────────────── */
+.lang-selector {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 12px;
+    background: var(--bg-hover);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text);
+    user-select: none;
+    transition: background 0.2s;
+}
+
+.lang-selector:hover {
+    background: var(--accent-alpha);
+    color: var(--accent);
+}
+
+.lang-arrow {
+    font-size: 0.6rem;
+    opacity: 0.6;
+}
+
+.lang-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-shadow: var(--shadow-hover);
+    overflow: hidden;
+    z-index: 99999;
+    min-width: 100px;
+}
+
+.lang-option {
+    padding: 9px 16px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: var(--text);
+    transition: background 0.15s;
+    white-space: nowrap;
+}
+
+.lang-option:hover {
+    background: var(--bg-hover);
+    color: var(--accent);
+}
+
+.lang-option.active {
+    background: var(--accent-alpha);
+    color: var(--accent);
+    font-weight: 700;
+}
+
+/* Settings link in header */
+.settings-link {
+    font-size: 1.1rem;
+    padding: 6px 10px;
+}
+
+/* ── LOGIN BUTTON ───────────────────────────────── */
+.login-btn {
+    background: var(--accent);
+    color: var(--btn-text);
+    border: none;
+    border-radius: 20px;
+    padding: 8px 20px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: filter 0.2s, transform 0.1s;
+}
+
+.login-btn:hover {
+    filter: brightness(0.9);
+    transform: translateY(-1px);
+}
+
+/* ── USER BADGE ─────────────────────────────────── */
+.user-badge,
+.user-name {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--btn-text);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1rem;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+/* ── RESPONSIVE ─────────────────────────────────── */
+@media (max-width: 768px) {
+    .nav-links {
+        display: none;
+    }
+
+    .site-header {
+        padding: 0 1rem;
+    }
+}

@@ -1,37 +1,51 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-// Ensure this path points correctly to your global or component-specific styles
-import "@/styles/SmartMealPlanner.css"; 
+import Image from "next/image";
+import "@/components/SmartMealPlanner.css"; 
 
-// SAFE IMPORT: Adjusted to match Next.js standards. 
-// Change this path if your Header component resides elsewhere (e.g., "@/components/Header")
-import Header from "@/components/Header"; 
+// Local layout data configurations
+const sliderImages = [
+    {
+        title: "Smart Meal Planning Made Simple",
+        subtitle: "Customized nutrition layouts tailored to your fitness goals and dietary restrictions.",
+        image: "https://images.unsplash.com/photo-1543353071-10c8ba85a904?w=1200"
+    },
+    {
+        title: "Track Macros Effortlessly",
+        subtitle: "Get instant caloric tracking breakdowns pulled directly from real ingredients.",
+        image: "https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=1200"
+    }
+];
 
-import {
-    plannerFeatures as fallbackPlannerFeatures,
-    sliderImages as fallbackSliderImages,
-    plannerTrending as fallbackPlannerTrending
-} from "@/lib/homePageData.js";
+const plannerFeatures = [
+    { icon: "🍳", title: "Smart Generation", desc: "Automate automated weekly recipe books targeted directly to your caloric ceiling." },
+    { icon: "🛒", title: "Groceries Auto-List", desc: "Instantly consolidate layout ingredients directly into checkable shopping sheets." },
+    { icon: "📊", title: "Macro Dashboards", desc: "Monitor automated nutrition analytics across customized daily views." }
+];
+
+const plannerTrending = [
+    {
+        title: "Mediterranean Avocado Salad",
+        desc: "High healthy fat ratios combined with lean natural greens.",
+        image: "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=500",
+        icon: "🥗"
+    },
+    {
+        title: "High Protein Berry Parfait",
+        desc: "Low calorie density morning meal built for recovery cycles.",
+        image: "https://images.unsplash.com/photo-1488477181946-6428a0291777?w=500",
+        icon: "🍓"
+    }
+];
 
 export default function SmartMealPlannerPage({
-    user, onLoginClick, onLogoClick, onAboutClick, onContactClick, onSubscriptionClick,
-    onCommunityClick, isDark, toggleDarkMode, onRecipeClick, onProductsClick,
-    onLogoutClick
+    user, onRecipeClick, onProductsClick, isDark
 }) {
     const [currentSlide, setCurrentSlide] = useState(0);
-
     const [recipes, setRecipes] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [plannerFeatures, setPlannerFeatures] = useState([]);
-    const [sliderImages, setSliderImages] = useState([]);
-    const [plannerTrending, setPlannerTrending] = useState([]);
-
     const recipesRef = useRef(null);
-
-    useEffect(() => {
-        fetchHomePageData();
-    }, []);
 
     useEffect(() => {
         fetchRecipes();
@@ -39,40 +53,11 @@ export default function SmartMealPlannerPage({
 
     useEffect(() => {
         if (!sliderImages.length) return;
-
         const timer = setInterval(() => {
             setCurrentSlide((prev) => (prev + 1) % sliderImages.length);
         }, 5000);
-
         return () => clearInterval(timer);
-    }, [sliderImages]);
-
-    const fetchHomePageData = async () => {
-        const requestOptions = {
-            method: "GET",
-            redirect: "follow"
-        };
-
-        try {
-            const response = await fetch("/api/homepage", requestOptions);
-
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
-            }
-
-            const result = await response.json();
-            console.log("Home page data from backend:", result);
-
-            setSliderImages(Array.isArray(result.sliderImages) ? result.sliderImages : []);
-            setPlannerFeatures(Array.isArray(result.plannerFeatures) ? result.plannerFeatures : []);
-            setPlannerTrending(Array.isArray(result.plannerTrending) ? result.plannerTrending : []);
-        } catch (error) {
-            console.warn("Homepage API unavailable, using local content fallback:", error);
-            setSliderImages(fallbackSliderImages);
-            setPlannerFeatures(fallbackPlannerFeatures);
-            setPlannerTrending(fallbackPlannerTrending);
-        }
-    };
+    }, []);
 
     const buildRecipeQuery = () => {
         const preference = user?.mealPreference || user?.profile?.goal || 'Healthy';
@@ -94,17 +79,18 @@ export default function SmartMealPlannerPage({
         try {
             setLoading(true);
             const query = buildRecipeQuery();
-            const response = await fetch(`/api/recipes/search?query=${encodeURIComponent(query)}&number=8`);
+            
+            // Fixed URL: Changed from /api/recipes/search to /api/recipe/search
+            const response = await fetch(`/api/recipe/search?query=${encodeURIComponent(query)}&number=8`);
+            
             if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`HTTP ${response.status}: ${errorText}`);
+                throw new Error(`HTTP Error Status: ${response.status}`);
             }
 
             const result = await response.json();
-            const items = Array.isArray(result.recipes) ? result.recipes : [];
-            setRecipes(items);
+            setRecipes(Array.isArray(result.recipes) ? result.recipes : []);
         } catch (error) {
-            console.error("Failed to fetch recipes:", error);
+            console.error("Failed to fetch recipes from route:", error);
             setRecipes([]);
         } finally {
             setLoading(false);
@@ -115,56 +101,15 @@ export default function SmartMealPlannerPage({
         recipesRef.current?.scrollIntoView({ behavior: "smooth" });
     };
 
-    if (!sliderImages.length) {
-        return (
-            <div className={`smart-meal-planner animate-fade-in ${isDark ? "dark-mode" : ""}`}>
-                <Header
-                    user={user}
-                    onLogoClick={onLogoClick}
-                    onContactClick={onContactClick}
-                    onAboutClick={onAboutClick}
-                    onSubscriptionClick={onSubscriptionClick}
-                    onCommunityClick={onCommunityClick}
-                    onProductsClick={onProductsClick}
-                    onFamilyClick={() => window.dispatchEvent(new CustomEvent("navigate", { detail: "family" }))}
-                    onLogoutClick={onLogoutClick}
-                    isDark={isDark}
-                    toggleDarkMode={toggleDarkMode}
-                    actionButton={!user ? <button onClick={onLoginClick} className="login-btn">Login</button> : null}
-                    activePage="home"
-                />
-                <div style={{ padding: "120px 20px", textAlign: "center" }}>
-                    <h2>Loading home page...</h2>
-                </div>
-            </div>
-        );
-    }
-
     return (
         <div className={`smart-meal-planner animate-fade-in ${isDark ? "dark-mode" : ""}`}>
-            <Header
-                user={user}
-                onLogoClick={onLogoClick}
-                onContactClick={onContactClick}
-                onAboutClick={onAboutClick}
-                onSubscriptionClick={onSubscriptionClick}
-                onCommunityClick={onCommunityClick}
-                onProductsClick={onProductsClick}
-                onFamilyClick={() => window.dispatchEvent(new CustomEvent("navigate", { detail: "family" }))}
-                onLogoutClick={onLogoutClick}
-                isDark={isDark}
-                toggleDarkMode={toggleDarkMode}
-                actionButton={!user ? <button onClick={onLoginClick} className="login-btn">Login</button> : null}
-                activePage="home"
-            />
-
             <section className="hero">
                 <div className="hero-slider">
                     {sliderImages.map((slide, index) => (
                         <div
                             key={index}
                             className={`slide ${index === currentSlide ? "active" : ""}`}
-                            style={{ backgroundImage: `url(${slide.url})` }}
+                            style={{ backgroundImage: `url(${slide.image})` }}
                         >
                             <div className="hero-overlay"></div>
                         </div>
@@ -210,8 +155,14 @@ export default function SmartMealPlannerPage({
                 <div className="trending-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "30px" }}>
                     {plannerTrending.map((item, idx) => (
                         <div key={idx} className="recipe-card" onClick={() => { if (onProductsClick) onProductsClick(); }}>
-                            <div className="recipe-img-wrapper">
-                                <img src={item.image} alt={item.title} />
+                            <div className="recipe-img-wrapper" style={{ position: "relative", height: "200px", width: "100%" }}>
+                                <Image 
+                                    src={item.image} 
+                                    alt={item.title}
+                                    fill
+                                    style={{ objectFit: "cover" }}
+                                    unoptimized
+                                />
                             </div>
                             <div className="recipe-content">
                                 <span className="recipe-badge">{item.icon} Trending</span>
@@ -264,17 +215,23 @@ export default function SmartMealPlannerPage({
                 ) : recipes.length ? (
                     <div className="recipe-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '24px', marginTop: '24px' }}>
                         {recipes.map((recipe) => (
-                            <div key={recipe._id || recipe.spoonacularId} className="recipe-card" onClick={() => onRecipeClick && onRecipeClick(recipe)} style={{ cursor: 'pointer' }}>
-                                <div className="recipe-img-wrapper">
-                                    <img src={recipe.imageURL || recipe.image || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400"} alt={recipe.title} />
+                            <div key={recipe.spoonacularId} className="recipe-card" onClick={() => onRecipeClick && onRecipeClick(recipe)} style={{ cursor: 'pointer' }}>
+                                <div className="recipe-img-wrapper" style={{ position: "relative", height: "200px", width: "100%" }}>
+                                    <Image 
+                                        src={recipe.image || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400"} 
+                                        alt={recipe.title} 
+                                        fill
+                                        style={{ objectFit: "cover" }}
+                                        unoptimized
+                                    />
                                 </div>
                                 <div className="recipe-content">
-                                    <span className={`recipe-badge ${recipe.category?.toLowerCase()?.replace(/\s+/g, '')}`}>{recipe.category || 'Recipe'}</span>
+                                    <span className="recipe-badge">{recipe.category || 'Recipe'}</span>
                                     <h4>{recipe.title}</h4>
                                     <div className="recipe-meta" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '10px' }}>
                                         {recipe.readyInMinutes && <span>⏱ {recipe.readyInMinutes} min</span>}
-                                        <span>🔥 {typeof recipe.calories === 'number' ? Math.round(recipe.calories) : recipe.calories || 'N/A'} kcal</span>
-                                        <span>⭐ {recipe.averageRating?.toFixed(1) || 'New'}</span>
+                                        <span>🔥 {recipe.calories} kcal</span>
+                                        <span>⭐ {recipe.averageRating?.toFixed(1) || '4.5'}</span>
                                     </div>
                                 </div>
                             </div>
