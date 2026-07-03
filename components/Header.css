@@ -160,12 +160,15 @@
     display: none;
     align-items: center;
     justify-content: center;
-    background: transparent;
-    border: none;
+    background: var(--bg-hover);
+    border: 1px solid var(--border);
     color: var(--text);
     font-size: 1.25rem;
     cursor: pointer;
-    padding: 6px;
+    padding: 8px 10px;
+    border-radius: 999px;
+    min-width: 40px;
+    min-height: 40px;
 }
 
 .mobile-nav-panel {
@@ -208,7 +211,7 @@
 }
 
 /* ── RESPONSIVE ─────────────────────────────────── */
-@media (max-width: 768px) {
+@media (max-width: 900px) {
     .nav-links {
         display: none;
     }

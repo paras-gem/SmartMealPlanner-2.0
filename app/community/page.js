@@ -16,6 +16,9 @@ export default function CommunityPage() {
   const [posting, setPosting] = useState(false);
   const [editId, setEditId] = useState(null);
   const [editContent, setEditContent] = useState("");
+  const [commentDrafts, setCommentDrafts] = useState({});
+  const [commentPostingIds, setCommentPostingIds] = useState({});
+  const [reactingIds, setReactingIds] = useState({});
 
   // Listen to Firebase auth
   useEffect(() => {
@@ -69,6 +72,61 @@ export default function CommunityPage() {
       toast.error("Failed to post. Try again.");
     } finally {
       setPosting(false);
+    }
+  };
+
+  const handleReaction = async (threadId, reaction) => {
+    if (!user) return toast.error("Log in to react to posts.");
+
+    setReactingIds(prev => ({ ...prev, [threadId]: true }));
+    try {
+      const res = await fetch(`/api/community/${threadId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "react",
+          reaction,
+          userId: user.uid || user.email,
+          email: user.email,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to react");
+      const updatedThread = await res.json();
+      setThreads(prev => prev.map(t => t._id === threadId ? updatedThread : t));
+    } catch {
+      toast.error("Could not update reaction.");
+    } finally {
+      setReactingIds(prev => ({ ...prev, [threadId]: false }));
+    }
+  };
+
+  const handleAddComment = async (threadId) => {
+    const draft = (commentDrafts[threadId] || "").trim();
+    if (!draft) return toast.error("Write a comment first.");
+    if (!user) return toast.error("Log in to comment.");
+
+    setCommentPostingIds(prev => ({ ...prev, [threadId]: true }));
+    try {
+      const res = await fetch(`/api/community/${threadId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "comment",
+          text: draft,
+          user: user.displayName || "Anonymous",
+          email: user.email,
+          userId: user.uid || user.email,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to comment");
+      const updatedThread = await res.json();
+      setThreads(prev => prev.map(t => t._id === threadId ? updatedThread : t));
+      setCommentDrafts(prev => ({ ...prev, [threadId]: "" }));
+      toast.success("Comment added!");
+    } catch {
+      toast.error("Could not post your comment.");
+    } finally {
+      setCommentPostingIds(prev => ({ ...prev, [threadId]: false }));
     }
   };
 
@@ -283,6 +341,58 @@ export default function CommunityPage() {
                       {thread.content}
                     </p>
                   )}
+
+                  <div style={{ display: "flex", gap: "10px", marginTop: "14px", flexWrap: "wrap", alignItems: "center" }}>
+                    <button
+                      onClick={() => handleReaction(thread._id, "like")}
+                      disabled={reactingIds[thread._id]}
+                      style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "1px solid var(--border)", color: "var(--text-main)", padding: "6px 12px", borderRadius: "20px", cursor: "pointer", fontSize: "0.85rem", fontWeight: "600" }}
+                    >
+                      👍 {thread.likedBy?.length || thread.likes || 0}
+                    </button>
+                    <button
+                      onClick={() => handleReaction(thread._id, "dislike")}
+                      disabled={reactingIds[thread._id]}
+                      style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "1px solid var(--border)", color: "var(--text-main)", padding: "6px 12px", borderRadius: "20px", cursor: "pointer", fontSize: "0.85rem", fontWeight: "600" }}
+                    >
+                      👎 {thread.dislikedBy?.length || thread.dislikes || 0}
+                    </button>
+                    <span style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>
+                      💬 {thread.replies?.length || 0}
+                    </span>
+                  </div>
+
+                  <div style={{ marginTop: "16px", paddingTop: "12px", borderTop: "1px solid var(--border)" }}>
+                    <div style={{ fontWeight: "700", marginBottom: "8px" }}>Comments</div>
+                    {(thread.replies || []).length === 0 ? (
+                      <p style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>No comments yet. Be the first to reply.</p>
+                    ) : (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                        {thread.replies.map((reply, index) => (
+                          <div key={`${thread._id}-${index}`} style={{ background: "var(--bg)", border: "1px solid var(--border)", borderRadius: "10px", padding: "10px 12px" }}>
+                            <div style={{ fontWeight: "700", marginBottom: "4px" }}>{reply.user || "Anonymous"}</div>
+                            <div style={{ color: "var(--text-main)", fontSize: "0.95rem" }}>{reply.text}</div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <div style={{ display: "flex", gap: "10px", marginTop: "10px", flexWrap: "wrap" }}>
+                      <input
+                        value={commentDrafts[thread._id] || ""}
+                        onChange={e => setCommentDrafts(prev => ({ ...prev, [thread._id]: e.target.value }))}
+                        placeholder="Write a comment..."
+                        style={{ flex: 1, minWidth: "220px", padding: "10px 12px", borderRadius: "999px", border: "1px solid var(--border)", background: "var(--bg-main)", color: "var(--text-main)", outline: "none" }}
+                      />
+                      <button
+                        onClick={() => handleAddComment(thread._id)}
+                        disabled={!user || commentPostingIds[thread._id]}
+                        style={{ padding: "10px 16px", background: "var(--primary-color)", color: "white", border: "none", borderRadius: "999px", fontWeight: "700", cursor: user ? "pointer" : "not-allowed", opacity: (!user || commentPostingIds[thread._id]) ? 0.7 : 1 }}
+                      >
+                        {commentPostingIds[thread._id] ? "Posting..." : "Comment"}
+                      </button>
+                    </div>
+                  </div>
 
                   {/* Actions */}
                   {isOwner(thread) && editId !== thread._id && (

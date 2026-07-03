@@ -213,6 +213,38 @@ export default function SettingsPage() {
         }
     };
 
+    const handleShareFamilyCode = async () => {
+        if (!familyInfo?.familyCode) return;
+
+        const shareText = `Join my SmartMeal family with code: ${familyInfo.familyCode}`;
+
+        if (typeof navigator !== 'undefined' && navigator.share) {
+            try {
+                await navigator.share({
+                    title: 'SmartMeal Family Invite',
+                    text: shareText,
+                    url: window.location.origin,
+                });
+                toast.success('Invite shared.');
+            } catch {
+                toast.error('Sharing was cancelled.');
+            }
+            return;
+        }
+
+        if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+            try {
+                await navigator.clipboard.writeText(shareText);
+                toast.success('Family code copied to clipboard.');
+            } catch {
+                toast.error('Could not copy family code.');
+            }
+            return;
+        }
+
+        toast.error('Sharing is not available on this device.');
+    };
+
     if (loading || !profile) return (
         <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
             Loading Settings...
@@ -379,9 +411,14 @@ export default function SettingsPage() {
                                 <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Family Code (Share this to invite others)</span>
                                 <h3 style={{ fontSize: '1.8rem', letterSpacing: '0.1em', margin: '4px 0 0' }}>{familyInfo.familyCode}</h3>
                             </div>
-                            <button onClick={() => handleRemoveFamilyMember(user.uid)} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>
-                                Leave Family
-                            </button>
+                            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                <button onClick={handleShareFamilyCode} style={{ background: 'var(--primary-color)', color: 'white', border: 'none', borderRadius: '999px', cursor: 'pointer', padding: '8px 12px', fontWeight: '700' }} title="Share family code">
+                                    ⤴
+                                </button>
+                                <button onClick={() => handleRemoveFamilyMember(user.uid)} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>
+                                    Leave Family
+                                </button>
+                            </div>
                         </div>
                         
                         <h3 style={{ fontSize: '1.2rem', marginBottom: '12px' }}>Members</h3>

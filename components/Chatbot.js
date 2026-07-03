@@ -54,7 +54,12 @@ const Chatbot = ({ isDark, trialDaysLeft, isPremium }) => {
     }, []);
 
     useEffect(() => {
-        if (!aiEnabled || !user || !isOpen) {
+        if (!aiEnabled) {
+            setIsOpen(false);
+            return;
+        }
+
+        if (!user || !isOpen) {
             return;
         }
 

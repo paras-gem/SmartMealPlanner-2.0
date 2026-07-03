@@ -34,6 +34,11 @@ export async function POST(request) {
       avatar: avatar || "",
       content: content.trim(),
       tag: tag || "General",
+      likes: 0,
+      dislikes: 0,
+      likedBy: [],
+      dislikedBy: [],
+      replies: [],
       createdAt: new Date(),
     });
 
