@@ -155,6 +155,23 @@
     padding: 6px 10px;
 }
 
+/* ── MOBILE MENU ───────────────────────────────── */
+.mobile-menu-toggle {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: var(--text);
+    font-size: 1.25rem;
+    cursor: pointer;
+    padding: 6px;
+}
+
+.mobile-nav-panel {
+    display: none;
+}
+
 /* ── LOGIN BUTTON ───────────────────────────────── */
 .login-btn {
     background: var(--accent);
@@ -194,6 +211,47 @@
 @media (max-width: 768px) {
     .nav-links {
         display: none;
+    }
+
+    .mobile-menu-toggle {
+        display: flex;
+    }
+
+    .mobile-nav-panel {
+        display: flex;
+        flex-direction: column;
+        position: absolute;
+        top: calc(100% + 8px);
+        right: 1rem;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        box-shadow: var(--shadow-hover);
+        padding: 0.4rem;
+        min-width: 200px;
+        gap: 0.2rem;
+        z-index: 10000;
+    }
+
+    .mobile-nav-link {
+        text-decoration: none;
+        color: var(--text);
+        padding: 0.75rem 0.9rem;
+        border-radius: 10px;
+        font-weight: 600;
+        background: transparent;
+        border: none;
+        text-align: left;
+        cursor: pointer;
+    }
+
+    .mobile-nav-link:hover {
+        background: var(--bg-hover);
+        color: var(--accent);
+    }
+
+    .mobile-nav-logout {
+        color: #ef4444;
     }
 
     .site-header {

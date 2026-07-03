@@ -1,6 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from 'next/navigation';
+import { auth } from '@/lib/firebaseConfig';
+import { onAuthStateChanged } from 'firebase/auth';
 
 export default function SmartMealPlanner() {
   const router = useRouter();
@@ -11,6 +13,7 @@ export default function SmartMealPlanner() {
   const [activeCategory, setActiveCategory] = useState("all");
   const [randomRecipe, setRandomRecipe] = useState(null);
   const [loadingRandom, setLoadingRandom] = useState(false);
+  const [aiEnabled, setAiEnabled] = useState(true);
 
   const fetchRecipes = async (searchQuery) => {
     if (!searchQuery || !searchQuery.trim()) return;
@@ -45,6 +48,41 @@ export default function SmartMealPlanner() {
   useEffect(() => {
     fetchRecipes("chicken");
     fetchRandomRecipe();
+  }, []);
+
+  useEffect(() => {
+    const refreshAiPreference = async (firebaseUser) => {
+      if (!firebaseUser) {
+        setAiEnabled(true);
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/users?uid=${firebaseUser.uid}`);
+        if (res.ok) {
+          const profile = await res.json();
+          setAiEnabled(profile.isAIEnabled !== false);
+        } else {
+          setAiEnabled(true);
+        }
+      } catch {
+        setAiEnabled(true);
+      }
+    };
+
+    const unsub = onAuthStateChanged(auth, refreshAiPreference);
+    const onAiSettingUpdated = () => {
+      const currentUser = auth.currentUser;
+      if (currentUser) {
+        refreshAiPreference(currentUser);
+      }
+    };
+
+    window.addEventListener('ai-setting-updated', onAiSettingUpdated);
+    return () => {
+      unsub();
+      window.removeEventListener('ai-setting-updated', onAiSettingUpdated);
+    };
   }, []);
 
   const handleSearch = (e) => {
@@ -127,12 +165,14 @@ export default function SmartMealPlanner() {
                 >
                   View Recipe
                 </button>
-                <button 
-                  onClick={fetchRandomRecipe} disabled={loadingRandom}
-                  style={{ padding: "12px 28px", background: "var(--bg-hover)", color: "var(--text-main)", border: "1px solid var(--border)", borderRadius: "30px", fontWeight: "700", cursor: "pointer" }}
-                >
-                  {loadingRandom ? "Loading..." : "🔀 Surprise Me"}
-                </button>
+                {aiEnabled && (
+                  <button 
+                    onClick={fetchRandomRecipe} disabled={loadingRandom}
+                    style={{ padding: "12px 28px", background: "var(--bg-hover)", color: "var(--text-main)", border: "1px solid var(--border)", borderRadius: "30px", fontWeight: "700", cursor: "pointer" }}
+                  >
+                    {loadingRandom ? "Loading..." : "🔀 Surprise Me"}
+                  </button>
+                )}
               </div>
             </div>
           </div>

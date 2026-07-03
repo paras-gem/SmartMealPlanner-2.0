@@ -103,6 +103,7 @@ export default function SettingsPage() {
                 })
             });
             if (!res.ok) throw new Error("Failed to save profile");
+            window.dispatchEvent(new Event('ai-setting-updated'));
             toast.success("Settings saved successfully!");
         } catch (err) {
             toast.error("Failed to save settings.");

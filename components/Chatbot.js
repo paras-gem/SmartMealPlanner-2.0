@@ -8,6 +8,7 @@ import { onAuthStateChanged } from "firebase/auth";
 
 const Chatbot = ({ isDark, trialDaysLeft, isPremium }) => {
     const [user, setUser] = useState(null);
+    const [aiEnabled, setAiEnabled] = useState(true);
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState([
         { text: "Hi! I'm NutriBot. Your personal nutrition assistant. What can I help you cook or plan today?", isBot: true }
@@ -17,26 +18,57 @@ const Chatbot = ({ isDark, trialDaysLeft, isPremium }) => {
     const fileInputRef = useRef(null);
 
     useEffect(() => {
-        const unsub = onAuthStateChanged(auth, (firebaseUser) => {
+        const refreshAiPreference = async (firebaseUser) => {
             setUser(firebaseUser || null);
-        });
-        return () => unsub();
+            if (!firebaseUser) {
+                setAiEnabled(true);
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/users?uid=${firebaseUser.uid}`);
+                if (res.ok) {
+                    const profile = await res.json();
+                    setAiEnabled(profile.isAIEnabled !== false);
+                } else {
+                    setAiEnabled(true);
+                }
+            } catch {
+                setAiEnabled(true);
+            }
+        };
+
+        const unsub = onAuthStateChanged(auth, refreshAiPreference);
+        const onAiSettingUpdated = () => {
+            const currentUser = auth.currentUser;
+            if (currentUser) {
+                refreshAiPreference(currentUser);
+            }
+        };
+
+        window.addEventListener('ai-setting-updated', onAiSettingUpdated);
+        return () => {
+            unsub();
+            window.removeEventListener('ai-setting-updated', onAiSettingUpdated);
+        };
     }, []);
 
     useEffect(() => {
-        if (user && isOpen) {
-            const uid = user.email || user.firebaseUID;
-            fetch(`/api/chat?userId=${encodeURIComponent(uid)}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (Array.isArray(data) && data.length > 0) {
-                        const loaded = data.map(m => ({ text: m.text, isBot: m.role === 'bot' }));
-                        setMessages(loaded);
-                    }
-                })
-                .catch(err => console.error("Error loading chat history:", err));
+        if (!aiEnabled || !user || !isOpen) {
+            return;
         }
-    }, [user, isOpen]);
+
+        const uid = user.email || user.firebaseUID;
+        fetch(`/api/chat?userId=${encodeURIComponent(uid)}`)
+            .then(res => res.json())
+            .then(data => {
+                if (Array.isArray(data) && data.length > 0) {
+                    const loaded = data.map(m => ({ text: m.text, isBot: m.role === 'bot' }));
+                    setMessages(loaded);
+                }
+            })
+            .catch(err => console.error("Error loading chat history:", err));
+    }, [aiEnabled, user, isOpen]);
 
     const convertToBase64 = (file) => {
         return new Promise((resolve, reject) => {
@@ -113,6 +145,8 @@ const Chatbot = ({ isDark, trialDaysLeft, isPremium }) => {
             e.target.value = "";
         }
     };
+
+    if (!aiEnabled) return null;
 
     return (
         <div className={`chatbot-container ${isDark ? "dark-mode" : ""}`}>

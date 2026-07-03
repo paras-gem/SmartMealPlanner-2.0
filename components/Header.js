@@ -8,22 +8,59 @@ import { auth } from '@/lib/firebaseConfig';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import './Header.css';
 
+const navLinks = [
+    { href: '/', label: 'Home' },
+    { href: '/products', label: 'Recipes' },
+    { href: '/community', label: 'Community' },
+    { href: '/about', label: 'About' },
+];
+
 const Header = () => {
     const [user, setUser] = useState(null);
     const [userMenuOpen, setUserMenuOpen] = useState(false);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [aiEnabled, setAiEnabled] = useState(true);
     const pathname = usePathname();
     const router = useRouter();
 
     useEffect(() => {
-        const unsub = onAuthStateChanged(auth, (firebaseUser) => {
+        const refreshAiPreference = async (firebaseUser) => {
             setUser(firebaseUser || null);
-        });
-        return () => unsub();
+            if (!firebaseUser) {
+                setAiEnabled(true);
+                return;
+            }
+
+            try {
+                const res = await fetch(`/api/users?uid=${firebaseUser.uid}`);
+                if (res.ok) {
+                    const profile = await res.json();
+                    setAiEnabled(profile.isAIEnabled !== false);
+                }
+            } catch {
+                setAiEnabled(true);
+            }
+        };
+
+        const unsub = onAuthStateChanged(auth, refreshAiPreference);
+        const onAiSettingUpdated = () => {
+            const currentUser = auth.currentUser;
+            if (currentUser) {
+                refreshAiPreference(currentUser);
+            }
+        };
+
+        window.addEventListener('ai-setting-updated', onAiSettingUpdated);
+        return () => {
+            unsub();
+            window.removeEventListener('ai-setting-updated', onAiSettingUpdated);
+        };
     }, []);
 
     const handleLogout = async () => {
         await signOut(auth);
         setUserMenuOpen(false);
+        setMobileMenuOpen(false);
         router.push('/');
     };
 
@@ -36,12 +73,40 @@ const Header = () => {
             </Link>
 
             <nav className="nav-links">
-                <Link href="/" className={`nav-link ${isActive('/')}`}>Home</Link>
-                <Link href="/products" className={`nav-link ${isActive('/products')}`}>Recipes</Link>
-                <Link href="/community" className={`nav-link ${isActive('/community')}`}>Community</Link>
-                <Link href="/about" className={`nav-link ${isActive('/about')}`}>About</Link>
+                {navLinks.map((link) => (
+                    <Link key={link.href} href={link.href} className={`nav-link ${isActive(link.href)}`}>
+                        {link.label}
+                    </Link>
+                ))}
                 {user && <Link href="/dashboard" className={`nav-link ${isActive('/dashboard')}`}>Dashboard</Link>}
             </nav>
+
+            <button
+                className="mobile-menu-toggle"
+                onClick={() => setMobileMenuOpen((prev) => !prev)}
+                aria-label="Toggle navigation"
+            >
+                ☰
+            </button>
+
+            {mobileMenuOpen && (
+                <div className="mobile-nav-panel">
+                    {navLinks.map((link) => (
+                        <Link key={link.href} href={link.href} className={`mobile-nav-link ${isActive(link.href)}`} onClick={() => setMobileMenuOpen(false)}>
+                            {link.label}
+                        </Link>
+                    ))}
+                    {user ? (
+                        <>
+                            <Link href="/dashboard" className={`mobile-nav-link ${isActive('/dashboard')}`} onClick={() => setMobileMenuOpen(false)}>Dashboard</Link>
+                            <Link href="/settings" className="mobile-nav-link" onClick={() => setMobileMenuOpen(false)}>Settings</Link>
+                            <button className="mobile-nav-link mobile-nav-logout" onClick={handleLogout}>Log Out</button>
+                        </>
+                    ) : (
+                        <Link href="/login" className="mobile-nav-link" onClick={() => setMobileMenuOpen(false)}>Log In</Link>
+                    )}
+                </div>
+            )}
 
             <div className="header-actions">
                 <ThemeToggle />
