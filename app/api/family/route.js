@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { initDb } from "@/lib/models";
+import { parseFamilyIdentifier } from "@/lib/familyInvite";
 
 // GET: Fetch family details by firebaseUID
 export async function GET(request) {
@@ -25,7 +26,7 @@ export async function GET(request) {
 // POST: Create or Join Family
 export async function POST(request) {
   try {
-    const { action, firebaseUID, email, name, familyCode } = await request.json();
+    const { action, firebaseUID, email, name, familyCode, inviteValue } = await request.json();
 
     if (!firebaseUID) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -41,28 +42,33 @@ export async function POST(request) {
         sharedGroceryList: []
       });
       return NextResponse.json({ success: true, family: newFamily });
-    } 
-    
-    if (action === "join") {
-      if (!familyCode) return NextResponse.json({ error: "Family code is required" }, { status: 400 });
-      
-      const family = await db.FamilySync.findOne({ familyCode });
-      if (!family) return NextResponse.json({ error: "Invalid family code" }, { status: 404 });
+    }
 
-      // Check if already in another family
-      const existing = await db.FamilySync.findOne({ "members.firebaseUID": firebaseUID });
-      if (existing) {
-        if (existing.familyCode === familyCode) {
-           return NextResponse.json({ success: true, family }); // Already in this family
-        } else {
-           // Leave old family
-           await db.FamilySync.updateOne({ _id: existing._id }, { $pull: { members: { firebaseUID } } });
-        }
+    if (action === "join") {
+      const identifier = parseFamilyIdentifier(inviteValue || familyCode || "");
+      if (!identifier) return NextResponse.json({ error: "Family code or email is required" }, { status: 400 });
+
+      let family = null;
+      if (identifier.type === "code") {
+        family = await db.FamilySync.findOne({ familyCode: identifier.value });
+      } else {
+        family = await db.FamilySync.findOne({ "members.email": identifier.value });
       }
 
-      // Add to new family
+      if (!family) {
+        return NextResponse.json({ error: identifier.type === "email" ? "No family found for that email" : "Invalid family code" }, { status: 404 });
+      }
+
+      const existing = await db.FamilySync.findOne({ "members.firebaseUID": firebaseUID });
+      if (existing) {
+        if (existing.familyCode === family.familyCode) {
+          return NextResponse.json({ success: true, family });
+        }
+        await db.FamilySync.updateOne({ _id: existing._id }, { $pull: { members: { firebaseUID } } });
+      }
+
       const updated = await db.FamilySync.findOneAndUpdate(
-        { familyCode },
+        { familyCode: family.familyCode },
         { $push: { members: { firebaseUID, email, name } } },
         { new: true }
       );

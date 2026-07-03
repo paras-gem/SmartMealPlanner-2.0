@@ -14,7 +14,7 @@ export default function SettingsPage() {
     const [favourites, setFavourites] = useState([]);
     const [familyInfo, setFamilyInfo] = useState(null);
     const [sharedGroceryList, setSharedGroceryList] = useState([]);
-    const [joinCodeInput, setJoinCodeInput] = useState("");
+    const [inviteInput, setInviteInput] = useState("");
     const [loading, setLoading] = useState(true);
 
     const [savingProfile, setSavingProfile] = useState(false);
@@ -178,16 +178,17 @@ export default function SettingsPage() {
     };
 
     const handleJoinFamily = async () => {
-        if (!joinCodeInput.trim()) return;
+        if (!inviteInput.trim()) return;
         try {
             const res = await fetch('/api/family', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'join', familyCode: joinCodeInput.trim(), firebaseUID: user.uid, email: user.email, name: profile.name || user.displayName })
+                body: JSON.stringify({ action: 'join', inviteValue: inviteInput.trim(), firebaseUID: user.uid, email: user.email, name: profile.name || user.displayName })
             });
             const data = await res.json();
             if (data.success) {
                 setFamilyInfo(data.family);
+                setInviteInput("");
                 toast.success("Joined family successfully!");
             } else toast.error(data.error);
         } catch (err) {
@@ -359,10 +360,10 @@ export default function SettingsPage() {
                             <div style={{ display: 'flex', gap: '8px' }}>
                                 <input 
                                     type="text" 
-                                    placeholder="Enter Join Code" 
-                                    value={joinCodeInput}
-                                    onChange={e => setJoinCodeInput(e.target.value)}
-                                    style={{ padding: '10px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--text-main)', width: '150px' }}
+                                    placeholder="Enter code or email" 
+                                    value={inviteInput}
+                                    onChange={e => setInviteInput(e.target.value)}
+                                    style={{ padding: '10px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg)', color: 'var(--text-main)', width: '180px' }}
                                 />
                                 <button onClick={handleJoinFamily} style={{ padding: '10px 20px', background: 'var(--bg-card)', color: 'var(--text-main)', border: '1px solid var(--border)', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>
                                     Join
