@@ -38,10 +38,10 @@ async function getAI() {
   try {
     const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '';
     const { genkit } = await import('genkit');
-    const { googleAI, gemini15Flash } = await import('@genkit-ai/googleai');
+    const { googleAI, gemini20Flash } = await import('@genkit-ai/googleai');
     _ai = genkit({
       plugins: [googleAI({ apiKey })],
-      model: gemini15Flash,
+      model: gemini20Flash,
     });
     return _ai;
   } catch (err) {
