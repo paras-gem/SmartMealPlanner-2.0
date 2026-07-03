@@ -348,14 +348,14 @@ export default function CommunityPage() {
                       disabled={reactingIds[thread._id]}
                       style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "1px solid var(--border)", color: "var(--text-main)", padding: "6px 12px", borderRadius: "20px", cursor: "pointer", fontSize: "0.85rem", fontWeight: "600" }}
                     >
-                      👍 {thread.likedBy?.length || thread.likes || 0}
+                      👍 {thread.likes ?? 0}
                     </button>
                     <button
                       onClick={() => handleReaction(thread._id, "dislike")}
                       disabled={reactingIds[thread._id]}
                       style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "1px solid var(--border)", color: "var(--text-main)", padding: "6px 12px", borderRadius: "20px", cursor: "pointer", fontSize: "0.85rem", fontWeight: "600" }}
                     >
-                      👎 {thread.dislikedBy?.length || thread.dislikes || 0}
+                      👎 {thread.dislikes ?? 0}
                     </button>
                     <span style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>
                       💬 {thread.replies?.length || 0}

@@ -213,6 +213,28 @@ export default function SettingsPage() {
         }
     };
 
+    const handleRemoveFavourite = async (recipe) => {
+        if (!user?.uid) return;
+
+        const recipeId = recipe.mealDbId || recipe.spoonacularId || recipe._id;
+        if (!recipeId) return;
+
+        try {
+            const res = await fetch(`/api/users/favourites?uid=${encodeURIComponent(user.uid)}&recipeId=${encodeURIComponent(recipeId)}`, {
+                method: 'DELETE',
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed to remove favourite');
+            setFavourites(prev => prev.filter((item) => {
+                const itemId = item.mealDbId || item.spoonacularId || item._id;
+                return itemId !== recipeId;
+            }));
+            toast.success('Removed from favourites.');
+        } catch (err) {
+            toast.error('Could not remove favourite.');
+        }
+    };
+
     const handleShareFamilyCode = async () => {
         if (!familyInfo?.familyCode) return;
 
@@ -290,20 +312,6 @@ export default function SettingsPage() {
                             <option value="Save Time">Save Time Cooking</option>
                         </select>
                     </div>
-                    <div>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 'bold', cursor: 'pointer' }}>
-                            <input 
-                                type="checkbox" 
-                                checked={profile.isAIEnabled !== false}
-                                onChange={e => setProfile({...profile, isAIEnabled: e.target.checked})}
-                                style={{ width: '20px', height: '20px' }}
-                            />
-                            Enable NutriBot AI Assistant
-                        </label>
-                        <p style={{ margin: '5px 0 0 30px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                            Allows the floating chatbot to provide natural language meal planning and recipe suggestions.
-                        </p>
-                    </div>
                     <button 
                         onClick={handleSaveProfile} 
                         disabled={savingProfile}
@@ -359,11 +367,21 @@ export default function SettingsPage() {
                                 style={{ 
                                     background: 'var(--bg-main)', borderRadius: 'var(--radius-lg)', 
                                     border: '1px solid var(--border)', overflow: 'hidden', cursor: 'pointer',
-                                    transition: 'transform 0.2s'
+                                    transition: 'transform 0.2s', position: 'relative'
                                 }}
                                 onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02)'}
                                 onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
                             >
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleRemoveFavourite(recipe);
+                                    }}
+                                    style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(255,255,255,0.95)', border: '1px solid var(--border)', borderRadius: '999px', cursor: 'pointer', padding: '6px 8px', fontSize: '0.8rem' }}
+                                    title="Remove favourite"
+                                >
+                                    ×
+                                </button>
                                 <div style={{ height: '120px', background: 'var(--bg-hover)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                     <span style={{ fontSize: '2rem' }}>🍲</span>
                                 </div>
@@ -406,14 +424,14 @@ export default function SettingsPage() {
                     </div>
                 ) : (
                     <div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', padding: '16px', background: 'var(--bg-hover)', borderRadius: '12px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '20px', padding: '16px', background: 'var(--bg-hover)', borderRadius: '12px' }}>
                             <div>
                                 <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Family Code (Share this to invite others)</span>
                                 <h3 style={{ fontSize: '1.8rem', letterSpacing: '0.1em', margin: '4px 0 0' }}>{familyInfo.familyCode}</h3>
                             </div>
-                            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                            <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
                                 <button onClick={handleShareFamilyCode} style={{ background: 'var(--primary-color)', color: 'white', border: 'none', borderRadius: '999px', cursor: 'pointer', padding: '8px 12px', fontWeight: '700' }} title="Share family code">
-                                    ⤴
+                                    Share Code
                                 </button>
                                 <button onClick={() => handleRemoveFamilyMember(user.uid)} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>
                                     Leave Family

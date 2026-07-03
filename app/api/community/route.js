@@ -8,7 +8,16 @@ export async function GET() {
     if (!db) return NextResponse.json({ threads: [] });
 
     const threads = await db.Thread.find({}).sort({ createdAt: -1 }).lean();
-    return NextResponse.json({ threads });
+    const normalizedThreads = threads.map((thread) => ({
+      ...thread,
+      likes: thread.likedBy?.length ?? thread.likes ?? 0,
+      dislikes: thread.dislikedBy?.length ?? thread.dislikes ?? 0,
+      likedBy: thread.likedBy || [],
+      dislikedBy: thread.dislikedBy || [],
+      replies: thread.replies || [],
+    }));
+
+    return NextResponse.json({ threads: normalizedThreads });
   } catch (err) {
     console.error("[Community GET]", err.message);
     return NextResponse.json({ error: "Server error" }, { status: 500 });

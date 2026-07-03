@@ -39,35 +39,44 @@ export async function PATCH(request, { params }) {
 
       const likedBy = Array.isArray(thread.likedBy) ? thread.likedBy : [];
       const dislikedBy = Array.isArray(thread.dislikedBy) ? thread.dislikedBy : [];
+      const currentLikes = Number.isFinite(thread.likes) ? Number(thread.likes) : likedBy.length;
+      const currentDislikes = Number.isFinite(thread.dislikes) ? Number(thread.dislikes) : dislikedBy.length;
 
       if (reaction === "like") {
         const alreadyLiked = likedBy.includes(identity);
         const alreadyDisliked = dislikedBy.includes(identity);
 
-        thread.likedBy = alreadyLiked
-          ? likedBy.filter((value) => value !== identity)
-          : [...likedBy, identity];
+        if (alreadyLiked) {
+          thread.likedBy = likedBy.filter((value) => value !== identity);
+          thread.likes = Math.max(currentLikes - 1, 0);
+        } else {
+          thread.likedBy = [...likedBy, identity];
+          thread.likes = currentLikes + 1;
+        }
 
         if (alreadyDisliked) {
           thread.dislikedBy = dislikedBy.filter((value) => value !== identity);
+          thread.dislikes = Math.max(currentDislikes - 1, 0);
         }
       } else if (reaction === "dislike") {
         const alreadyDisliked = dislikedBy.includes(identity);
         const alreadyLiked = likedBy.includes(identity);
 
-        thread.dislikedBy = alreadyDisliked
-          ? dislikedBy.filter((value) => value !== identity)
-          : [...dislikedBy, identity];
+        if (alreadyDisliked) {
+          thread.dislikedBy = dislikedBy.filter((value) => value !== identity);
+          thread.dislikes = Math.max(currentDislikes - 1, 0);
+        } else {
+          thread.dislikedBy = [...dislikedBy, identity];
+          thread.dislikes = currentDislikes + 1;
+        }
 
         if (alreadyLiked) {
           thread.likedBy = likedBy.filter((value) => value !== identity);
+          thread.likes = Math.max(currentLikes - 1, 0);
         }
       } else {
         return NextResponse.json({ error: "Invalid reaction" }, { status: 400 });
       }
-
-      thread.likes = thread.likedBy.length;
-      thread.dislikes = thread.dislikedBy.length;
       await thread.save();
       return NextResponse.json(thread);
     }

@@ -86,7 +86,7 @@ const Header = () => {
                 onClick={() => setMobileMenuOpen((prev) => !prev)}
                 aria-label="Toggle navigation"
             >
-                ☰
+                ☰ Menu
             </button>
 
             {mobileMenuOpen && (
