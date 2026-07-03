@@ -1,0 +1,269 @@
+.family-sync-page {
+    min-height: 100vh;
+    padding-top: 100px;
+}
+
+.family-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem;
+    text-align: center;
+}
+
+.family-container h2 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.family-container>p {
+    color: #666;
+    margin-bottom: 3rem;
+}
+
+.dark-mode .family-container>p {
+    color: #aaa;
+}
+
+.family-setup {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.family-option-card {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 16px;
+    padding: 2.5rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.07);
+    min-width: 260px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    text-align: left;
+}
+
+.dark-mode .family-option-card {
+    background: rgba(30, 30, 30, 0.9);
+    color: var(--primary-text);
+}
+
+.family-option-card h3 {
+    font-size: 1.2rem;
+}
+
+.family-option-card p {
+    color: #777;
+    font-size: 0.9rem;
+}
+
+.dark-mode .family-option-card p {
+    color: #aaa;
+}
+
+.family-divider {
+    font-size: 1.5rem;
+    color: #aaa;
+    font-weight: bold;
+}
+
+.family-input {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    font-size: 1rem;
+    background: transparent;
+}
+
+.dark-mode .family-input {
+    border-color: rgba(255, 255, 255, 0.2);
+    color: var(--primary-text);
+}
+
+.family-btn {
+    padding: 12px 20px;
+    border-radius: 8px;
+    border: none;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: filter 0.2s;
+}
+
+.family-btn.primary {
+    background: var(--primary-color, #6dba5f);
+    color: var(--primary-text);
+}
+
+.family-btn.secondary {
+    background: rgba(109, 186, 95, 0.15);
+    color: var(--primary-color, #6dba5f);
+}
+
+.family-btn:hover {
+    filter: brightness(0.9);
+}
+
+.family-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Family Dashboard */
+.family-dashboard {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 16px;
+    padding: 2.5rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.07);
+    text-align: left;
+}
+
+.dark-mode .family-dashboard {
+    background: rgba(30, 30, 30, 0.9);
+    color: var(--primary-text);
+}
+
+.family-info-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+    margin-bottom: 2rem;
+}
+
+.dark-mode .family-info-bar {
+    border-bottom-color: rgba(255, 255, 255, 0.07);
+}
+
+.family-code-badge {
+    display: inline-block;
+    background: var(--primary-color, #6dba5f);
+    color: var(--primary-text);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-family: monospace;
+    font-size: 1.1rem;
+    margin: 0 8px;
+    letter-spacing: 2px;
+}
+
+.grocery-section h3 {
+    font-size: 1.4rem;
+    margin-bottom: 1.2rem;
+}
+
+.grocery-input-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 1.5rem;
+}
+
+.grocery-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.grocery-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: rgba(109, 186, 95, 0.06);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.2s;
+    border: 1px solid rgba(109, 186, 95, 0.15);
+}
+
+.grocery-item:hover {
+    background: rgba(109, 186, 95, 0.12);
+}
+
+.grocery-item.checked .item-name {
+    text-decoration: line-through;
+    opacity: 0.5;
+}
+
+.check-icon {
+    font-size: 1.2rem;
+    color: var(--primary-color, #6dba5f);
+}
+
+.item-name {
+    flex: 1;
+    font-weight: 500;
+}
+
+.item-by {
+    font-size: 0.8rem;
+    color: #888;
+}
+
+.empty-list {
+    color: #888;
+    font-style: italic;
+    text-align: center;
+    padding: 2rem;
+}
+
+/* Google Sync Styles */
+.google-sync-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.sync-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.sync-badge.connected {
+    background: rgba(46, 204, 113, 0.1);
+    color: #27ae60;
+    border: 1px solid rgba(46, 204, 113, 0.3);
+}
+
+.family-btn.google-btn {
+    background: #4285F4;
+    color: white;
+    font-size: 0.9rem;
+    padding: 10px 16px;
+}
+
+.item-details {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.mini-sync-btn {
+    background: transparent;
+    border: 1px solid rgba(109, 186, 95, 0.3);
+    border-radius: 6px;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+}
+
+.mini-sync-btn:hover {
+    background: var(--primary-color, #6dba5f);
+    color: white;
+    transform: scale(1.1);
+}
+
+.dark-mode .mini-sync-btn {
+    border-color: rgba(255, 255, 255, 0.2);
+}

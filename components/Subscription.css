@@ -1,0 +1,323 @@
+.subscription-page {
+    min-height: 100vh;
+    padding-top: 100px;
+}
+
+.subscription-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    text-align: center;
+    padding: 2rem;
+}
+
+.subscription-container h2 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.subscription-container p {
+    color: #666;
+    margin-bottom: 3rem;
+}
+
+.dark-mode .subscription-container p {
+    color: #aaa;
+}
+
+.plans-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+}
+
+.plan-card {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 16px;
+    padding: 2.5rem 1.5rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease;
+}
+
+.dark-mode .plan-card {
+    background: rgba(30, 30, 30, 0.9);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: var(--primary-text);
+}
+
+.plan-card:hover {
+    transform: translateY(-5px);
+}
+
+.plan-card.popular {
+    border: 2px solid var(--primary-color, #6dba5f);
+    transform: scale(1.05);
+}
+
+.plan-card.popular:hover {
+    transform: scale(1.05) translateY(-5px);
+}
+
+.popular-badge {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--primary-color, #6dba5f);
+    color: var(--primary-text);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: bold;
+}
+
+.plan-card h3 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.plan-card .price {
+    margin-bottom: 2rem;
+}
+
+.plan-card .price strong {
+    font-size: 3rem;
+    color: var(--primary-color, #6dba5f);
+}
+
+.plan-card .price span {
+    color: #888;
+    font-size: 1.1rem;
+}
+
+.features-list {
+    list-style: none;
+    text-align: left;
+    margin-bottom: 2rem;
+    flex-grow: 1;
+}
+
+.features-list li {
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.dark-mode .features-list li {
+    border-bottom-color: rgba(255, 255, 255, 0.05);
+}
+
+.checkout-form {
+    margin-bottom: 1rem;
+}
+
+.checkout-form input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+.dark-mode .checkout-form input {
+    background: rgba(0, 0, 0, 0.2);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: var(--primary-text);
+}
+
+.upgrade-btn {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.2s;
+    background: #eee;
+    color: #333;
+}
+
+.plan-card.popular .upgrade-btn {
+    background: var(--primary-color, #6dba5f);
+    color: var(--primary-text);
+}
+
+.upgrade-btn.current {
+    background: rgba(0, 0, 0, 0.05);
+    color: #888;
+    cursor: default;
+}
+
+.dark-mode .upgrade-btn.current {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.upgrade-btn:not(.current):hover {
+    filter: brightness(0.9);
+}
+
+/* Payment Form */
+.payment-form {
+    margin-top: 1rem;
+    padding: 1.2rem;
+    background: rgba(0, 0, 0, 0.03);
+    border-radius: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.07);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.dark-mode .payment-form {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+.payment-form h4 {
+    font-size: 1rem;
+    margin-bottom: 4px;
+}
+
+.payment-form input {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1.5px solid rgba(0, 0, 0, 0.1);
+    font-size: 0.9rem;
+    background: white;
+    color: #333;
+    box-sizing: border-box;
+}
+
+.dark-mode .payment-form input {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.15);
+    color: var(--primary-text);
+}
+
+.payment-row {
+    display: flex;
+    gap: 8px;
+}
+
+.payment-row input {
+    flex: 1;
+}
+
+.pay-btn {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: none;
+    color: var(--primary-text);
+    font-weight: bold;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: filter 0.2s;
+}
+
+.pay-btn:hover {
+    filter: brightness(0.9);
+}
+
+.pay-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.mock-note {
+    font-size: 0.75rem;
+    color: #888;
+    text-align: center;
+    margin: 0;
+}
+
+/* Plan-specific buttons */
+.select-plan-btn {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: none;
+    color: var(--primary-text);
+    font-weight: bold;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-top: auto;
+    transition: filter 0.2s;
+}
+
+.select-plan-btn:hover {
+    filter: brightness(0.9);
+}
+
+.active-plan {
+    border: 2px solid var(--accent);
+}
+
+.active-plan-badge {
+    text-align: center;
+    color: var(--accent);
+    font-weight: bold;
+    margin-top: 1rem;
+    font-size: 0.95rem;
+}
+
+.plan-tagline {
+    color: #888;
+    font-size: 0.88rem;
+    margin-bottom: 1rem;
+}
+
+.active-badge {
+    background: var(--accent);
+    color: var(--primary-text);
+    font-size: 0.75rem;
+    padding: 3px 10px;
+    border-radius: 20px;
+    position: absolute;
+    top: 12px;
+    right: 12px;
+}
+
+/* Success Banner */
+.success-banner {
+    background: var(--tag-bg);
+    border: 1px solid var(--border);
+    color: var(--accent);
+    padding: 14px 20px;
+    border-radius: 10px;
+    margin-bottom: 2rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+
+.dark-mode .success-banner {
+    color: #9fdf9a;
+}
+
+/* Family Ad Banner */
+.family-ad-banner {
+    max-width: 700px;
+    margin: 3rem auto 0;
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(168, 85, 247, 0.05));
+    border: 1px solid rgba(168, 85, 247, 0.25);
+    border-radius: 16px;
+    padding: 2rem;
+    text-align: center;
+}
+
+.family-ad-banner h3 {
+    font-size: 1.3rem;
+    margin-bottom: 0.5rem;
+}
+
+.family-ad-banner p {
+    color: #666;
+}
+
+.dark-mode .family-ad-banner p {
+    color: #aaa;
+}

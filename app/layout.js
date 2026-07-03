@@ -1,17 +1,14 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
+import { ThemeProvider } from "next-themes";
+import { Toaster } from "sonner";
 import "./globals.css";
-// Adjust these import paths depending on exactly where your Header and Footer files live
-import Header from "@/components/Header"; 
-import Footer from "@/components/Footer"; 
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata = {
@@ -19,22 +16,39 @@ export const metadata = {
   description: "Personalized meal planning made simple",
 };
 
+import Chatbot from "@/components/Chatbot";
+
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
-      <body style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-        
-        {/* Called once globally - updates here reflect site-wide */}
-        <Header />
+    <html lang="en" className={inter.variable} suppressHydrationWarning>
+      <body style={{ display: "flex", flexDirection: "column", minHeight: "100vh", margin: 0 }}>
+        <ThemeProvider attribute="data-theme" defaultTheme="system" enableSystem>
+          {/* Global Header */}
+          <Header />
 
-        {/* This main tag ensures the content expands to push the footer down */}
-        <main style={{ flex: '1 0 auto' }}>
-          {children}
-        </main>
+          <main style={{ flex: "1 0 auto" }}>
+            {children}
+          </main>
 
-        {/* Called once globally */}
-        <Footer />
+          {/* Global Footer */}
+          <Footer />
 
+          {/* Chatbot Floating UI */}
+          <Chatbot />
+
+          {/* Sonner toast notifications */}
+          <Toaster
+            position="bottom-right"
+            richColors
+            closeButton
+            toastOptions={{
+              style: {
+                borderRadius: "12px",
+                fontFamily: "var(--font-inter)",
+              },
+            }}
+          />
+        </ThemeProvider>
       </body>
     </html>
   );
