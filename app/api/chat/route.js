@@ -1,44 +1,7 @@
 import { NextResponse } from "next/server";
 import { initDb } from "@/lib/models";
-import { genkit } from 'genkit';
-import { googleAI, gemini15Flash } from '@genkit-ai/googleai';
 
-// Initialize Genkit
-const ai = genkit({
-  plugins: [googleAI({ apiKey: process.env.GEMINI_API_KEY || '' })],
-  model: gemini15Flash,
-});
-
-/**
- * Genkit-powered NutriBot using Gemini 1.5 Flash.
- * Falls back to a rule-based response if GEMINI_API_KEY is not set or API fails.
- */
-async function generateAIResponse(userMessage, conversationHistory = []) {
-  if (!process.env.GEMINI_API_KEY) return fallbackResponse(userMessage);
-
-  try {
-    // Convert DB history to Genkit format
-    const messages = conversationHistory.slice(-6).map(m => ({
-      role: m.role === "bot" ? "model" : "user",
-      content: [{ text: m.text }],
-    }));
-
-    const response = await ai.generate({
-      system: SYSTEM_PROMPT,
-      messages: messages,
-      prompt: userMessage,
-      config: {
-        temperature: 0.85,
-        maxOutputTokens: 600,
-      }
-    });
-
-    return response.text || fallbackResponse(userMessage);
-  } catch (err) {
-    console.error("[Genkit API error]", err.message);
-    return fallbackResponse(userMessage);
-  }
-}
+// ─── Constants ────────────────────────────────────────────────────────────────
 
 const SYSTEM_PROMPT = `You are NutriBot, a friendly, knowledgeable AI meal planning and nutrition assistant integrated into SmartMeal Planner.
 
@@ -65,21 +28,80 @@ Rules:
 - Keep responses concise but complete (2-5 paragraphs max)
 - Never make up dangerous nutrition advice - recommend consulting a doctor for medical dietary needs`;
 
+// ─── Lazy Genkit initializer ──────────────────────────────────────────────────
+// IMPORTANT: Must NOT be initialized at module level — Next.js build will crash.
+// We initialize inside the request handler only.
+let _ai = null;
+
+async function getAI() {
+  if (_ai) return _ai;
+  try {
+    const { genkit } = await import('genkit');
+    const { googleAI, gemini15Flash } = await import('@genkit-ai/googleai');
+    _ai = genkit({
+      plugins: [googleAI({ apiKey: process.env.GEMINI_API_KEY || '' })],
+      model: gemini15Flash,
+    });
+    return _ai;
+  } catch (err) {
+    console.error("[Genkit] Failed to initialize:", err.message);
+    return null;
+  }
+}
+
+// ─── Fallback (no API key) ────────────────────────────────────────────────────
+
 function fallbackResponse(message) {
   const lower = message.toLowerCase();
-  const warning = "\n\n*(Note: I am running in Offline Mode. To unlock my full AI brain for natural language and real recipes, please add your `GEMINI_API_KEY` to the `.env.local` file!)*";
-  
+  const warning = "\n\n*(Note: I'm running in Offline Mode. Add `GEMINI_API_KEY` to `.env.local` to unlock full AI responses!)*";
+
   if (lower.includes("hello") || lower.includes("hi") || lower.includes("hey")) {
     return "Hi there! 👋 I'm NutriBot, your personal nutrition and recipe assistant. Ask me about recipes, meal plans, nutrition facts, or cooking tips!" + warning;
   }
-  if (lower.includes("recipe") || lower.includes("cook") || lower.includes("make")) {
-    return "I'd love to help with a recipe! 🍳 But since I'm in offline mode, I can't generate new ones right now. Please set your `GEMINI_API_KEY` to unlock this feature!" + warning;
+  if (lower.includes("recipe") || lower.includes("cook") || lower.includes("make") || lower.includes("how")) {
+    return "I'd love to help with a recipe! 🍳 In offline mode I can't generate new ones though. Please set your `GEMINI_API_KEY` to unlock this feature!" + warning;
   }
-  if (lower.includes("calorie") || lower.includes("nutrition") || lower.includes("healthy")) {
-    return "Great question about nutrition! 🥗 For a balanced meal, aim for lean proteins, complex carbs, and plenty of vegetables." + warning;
+  if (lower.includes("calorie") || lower.includes("nutrition") || lower.includes("healthy") || lower.includes("diet")) {
+    return "Great nutrition question! 🥗 For a balanced meal, aim for lean proteins, complex carbs, and plenty of vegetables. Consider a calorie deficit for weight loss or a surplus for muscle gain." + warning;
   }
-  return "That's an interesting question! 🤔 But without my Gemini API Key, I can only give pre-programmed responses. Please set `GEMINI_API_KEY` in `.env.local` for true AI chat!" + warning;
+  if (lower.includes("vegan") || lower.includes("vegetarian") || lower.includes("keto")) {
+    return "Dietary lifestyle questions! 🌱 I can help you with vegan, vegetarian, keto, and many other dietary lifestyles once my AI key is configured. For now: focus on whole foods and variety!" + warning;
+  }
+  return "That's a great question! 🤔 Please add `GEMINI_API_KEY` in `.env.local` for true AI-powered responses. For now I can only answer basic questions." + warning;
 }
+
+// ─── AI Response Generator ────────────────────────────────────────────────────
+
+async function generateAIResponse(userMessage, conversationHistory = []) {
+  if (!process.env.GEMINI_API_KEY) return fallbackResponse(userMessage);
+
+  const ai = await getAI();
+  if (!ai) return fallbackResponse(userMessage);
+
+  try {
+    const messages = conversationHistory.slice(-6).map(m => ({
+      role: m.role === "bot" ? "model" : "user",
+      content: [{ text: m.text }],
+    }));
+
+    const response = await ai.generate({
+      system: SYSTEM_PROMPT,
+      messages,
+      prompt: userMessage,
+      config: {
+        temperature: 0.85,
+        maxOutputTokens: 600,
+      },
+    });
+
+    return response.text || fallbackResponse(userMessage);
+  } catch (err) {
+    console.error("[Genkit API error]", err.message);
+    return fallbackResponse(userMessage);
+  }
+}
+
+// ─── POST: Send a chat message ────────────────────────────────────────────────
 
 export async function POST(request) {
   try {
@@ -134,6 +156,8 @@ export async function POST(request) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
+
+// ─── GET: Fetch chat history ──────────────────────────────────────────────────
 
 export async function GET(request) {
   try {

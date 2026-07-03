@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
+import { initDb } from "@/lib/models";
 
 /**
  * Universal multi-stage recipe search using TheMealDB:
  * Stage 1: Search by name (s=)
  * Stage 2: Search by category (c=)
  * Stage 3: Search by main ingredient (i=)
+ * Stage 4: Search by area/cuisine (a=)
+ * Stage 5: First-letter with strict filter
  */
 async function fetchWithFallback(query) {
   const base = "https://www.themealdb.com/api/json/v1/1";
@@ -59,16 +62,15 @@ async function fetchWithFallback(query) {
     return { meals: detailed.filter(Boolean), matchedBy: "area" };
   }
 
-  // Stage 5: first-letter fallback — search by first letter and filter client-side
+  // Stage 5: first-letter with strict client-side filter (no generic dumps)
   const firstLetter = query.trim()[0]?.toLowerCase();
   if (firstLetter && /[a-z]/.test(firstLetter)) {
     res = await fetch(`${base}/search.php?f=${firstLetter}`, { next: { revalidate: 60 } });
     data = await res.json();
     if (data.meals && data.meals.length > 0) {
-      // Filter results that loosely match the query in name, category, area, or tags
       const lowerQuery = query.toLowerCase();
       const filtered = data.meals.filter(m => {
-        const haystack = [m.strMeal, m.strCategory, m.strArea, m.strTags, m.strInstructions]
+        const haystack = [m.strMeal, m.strCategory, m.strArea, m.strTags]
           .filter(Boolean).join(" ").toLowerCase();
         return haystack.includes(lowerQuery);
       });
@@ -104,6 +106,8 @@ function mapMeal(meal) {
   };
 }
 
+// ─── GET: Search recipes ──────────────────────────────────────────────────────
+
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -116,5 +120,57 @@ export async function GET(request) {
   } catch (err) {
     console.error("[Recipes API] Internal error:", err.message);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
+
+// ─── POST: Save a recipe to MongoDB ──────────────────────────────────────────
+// Use this endpoint to persist a recipe from TheMealDB into your own database.
+// Body: { mealDbId, title, category, area, ingredients, instructions, image, tags, calories }
+
+export async function POST(request) {
+  try {
+    const body = await request.json();
+    const { mealDbId, title, category, area, ingredients, instructions, image, tags, calories, firebaseUID } = body;
+
+    if (!title) {
+      return NextResponse.json({ error: "title is required" }, { status: 400 });
+    }
+
+    const db = await initDb();
+    if (!db) return NextResponse.json({ error: "DB unavailable" }, { status: 503 });
+
+    // Build the document — use mealDbId as the unique external key
+    const recipeData = {
+      title,
+      category: category || "All",
+      area,
+      ingredients: Array.isArray(ingredients)
+        ? ingredients.map(i => (typeof i === "string" ? { name: i } : i))
+        : [],
+      steps: Array.isArray(instructions) ? instructions : [],
+      imageURL: image || null,
+      tags: tags || [],
+      calories: calories || 0,
+      scrapedFromWeb: false,
+      createdBy: firebaseUID || null,
+      createdAt: new Date(),
+    };
+
+    // If mealDbId provided, upsert so we don't duplicate
+    let recipe;
+    if (mealDbId) {
+      recipe = await db.Recipe.findOneAndUpdate(
+        { mealDbId: String(mealDbId) },
+        { $set: { ...recipeData, mealDbId: String(mealDbId) } },
+        { upsert: true, new: true }
+      );
+    } else {
+      recipe = await db.Recipe.create(recipeData);
+    }
+
+    return NextResponse.json({ success: true, recipe }, { status: 201 });
+  } catch (err) {
+    console.error("[Recipes POST]", err.message);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
