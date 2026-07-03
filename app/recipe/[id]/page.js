@@ -2,17 +2,16 @@
 
 import React, { useState, useEffect, use } from 'react';
 import { toast } from "sonner";
-import { Download, CalendarPlus, Share2, ArrowLeft, ThumbsUp, ThumbsDown, MessageSquare, ShoppingCart, Send } from "lucide-react";
+import { Download, Share2, ArrowLeft, ThumbsUp, ThumbsDown, MessageSquare, ShoppingCart, Send } from "lucide-react";
 import { useRouter } from 'next/navigation';
-import { auth, googleProvider } from '@/lib/firebaseConfig';
-import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from 'firebase/auth';
+import { auth } from '@/lib/firebaseConfig';
+import { onAuthStateChanged } from 'firebase/auth';
 
 export default function RecipeDetailsPage({ params }) {
     const { id } = use(params);
     const router = useRouter();
     const [recipe, setRecipe] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [syncingCalendar, setSyncingCalendar] = useState(false);
     const [downloadingPdf, setDownloadingPdf] = useState(false);
     const [addingToGrocery, setAddingToGrocery] = useState(false);
 
@@ -158,57 +157,6 @@ export default function RecipeDetailsPage({ params }) {
         }
     };
 
-    const handleSyncToCalendar = async () => {
-        if (!recipe) return;
-        setSyncingCalendar(true);
-        toast.loading("Authenticating with Google...", { id: 'cal-toast' });
-        try {
-            let token = null;
-            if (user) {
-                 const idTokenResult = await user.getIdTokenResult();
-                 // Might need fresh credential or use existing if scoped. 
-                 // We will force popup to ensure calendar scope for simplicity here.
-            }
-            const result = await signInWithPopup(auth, googleProvider);
-            const credential = GoogleAuthProvider.credentialFromResult(result);
-            token = credential?.accessToken;
-            if (!token) throw new Error("No access token. Make sure Calendar scope is enabled.");
-
-            toast.loading("Adding to Calendar...", { id: 'cal-toast' });
-
-            const event = {
-                summary: `Meal: ${recipe.title}`,
-                description: `Cooking ${recipe.title}.\n\nIngredients:\n${recipe.ingredients?.slice(0, 5).join('\n')}`,
-                start: {
-                    dateTime: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
-                    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                },
-                end: {
-                    dateTime: new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString(),
-                    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                },
-            };
-
-            const res = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify(event)
-            });
-
-            if (!res.ok) {
-                const errData = await res.json();
-                throw new Error(errData.error?.message || "Calendar API error");
-            }
-
-            toast.success("Added to Google Calendar!", { id: 'cal-toast' });
-        } catch (err) {
-            console.error("Calendar sync error:", err);
-            toast.error(`Sync failed: ${err.message}`, { id: 'cal-toast' });
-        } finally {
-            setSyncingCalendar(false);
-        }
-    };
-
     const handleShare = async () => {
         const url = window.location.href;
         if (navigator.share) {
@@ -258,9 +206,6 @@ export default function RecipeDetailsPage({ params }) {
                 </button>
                 <button onClick={handleAddToGrocery} disabled={addingToGrocery} style={btnStyle("var(--primary-color)")}>
                     <ShoppingCart size={18} /> {addingToGrocery ? "Adding..." : "Grocery List"}
-                </button>
-                <button onClick={handleSyncToCalendar} disabled={syncingCalendar} style={btnStyle("#4285F4")}>
-                    <CalendarPlus size={18} /> {syncingCalendar ? "Syncing..." : "Calendar"}
                 </button>
                 <button onClick={handleDownloadPdf} disabled={downloadingPdf} style={btnStyle("var(--bg-card)", "var(--text-main)")}>
                     <Download size={18} />

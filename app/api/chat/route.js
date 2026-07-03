@@ -73,7 +73,8 @@ function fallbackResponse(message) {
 // ─── AI Response Generator ────────────────────────────────────────────────────
 
 async function generateAIResponse(userMessage, conversationHistory = []) {
-  if (!process.env.GEMINI_API_KEY) return fallbackResponse(userMessage);
+  const hasApiKey = Boolean(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY);
+  if (!hasApiKey) return fallbackResponse(userMessage);
 
   const ai = await getAI();
   if (!ai) return fallbackResponse(userMessage);
@@ -94,7 +95,8 @@ async function generateAIResponse(userMessage, conversationHistory = []) {
       },
     });
 
-    return response.text || fallbackResponse(userMessage);
+    const text = response?.text || response?.output?.[0]?.content?.[0]?.text || null;
+    return text || fallbackResponse(userMessage);
   } catch (err) {
     console.error("[Genkit API error]", err.message);
     return fallbackResponse(userMessage);

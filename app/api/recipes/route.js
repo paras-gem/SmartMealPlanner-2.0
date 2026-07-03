@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { initDb } from "@/lib/models";
+import { fetchMealDbSearch } from "@/lib/recipeSearch";
 
 /**
  * Universal multi-stage recipe search using TheMealDB:
@@ -10,72 +11,10 @@ import { initDb } from "@/lib/models";
  * Stage 5: First-letter with strict filter
  */
 async function fetchWithFallback(query) {
-  const base = "https://www.themealdb.com/api/json/v1/1";
+  const meals = await fetchMealDbSearch(query);
 
-  // Stage 1: name search
-  let res = await fetch(`${base}/search.php?s=${encodeURIComponent(query)}`, { next: { revalidate: 60 } });
-  let data = await res.json();
-  if (data.meals && data.meals.length > 0) return { meals: data.meals, matchedBy: "name" };
-
-  // Stage 2: category search
-  res = await fetch(`${base}/filter.php?c=${encodeURIComponent(query)}`, { next: { revalidate: 60 } });
-  data = await res.json();
-  if (data.meals && data.meals.length > 0) {
-    const limited = data.meals.slice(0, 12);
-    const detailed = await Promise.all(
-      limited.map(async (m) => {
-        const r = await fetch(`${base}/lookup.php?i=${m.idMeal}`, { next: { revalidate: 60 } });
-        const d = await r.json();
-        return d.meals ? d.meals[0] : null;
-      })
-    );
-    return { meals: detailed.filter(Boolean), matchedBy: "category" };
-  }
-
-  // Stage 3: ingredient search
-  res = await fetch(`${base}/filter.php?i=${encodeURIComponent(query)}`, { next: { revalidate: 60 } });
-  data = await res.json();
-  if (data.meals && data.meals.length > 0) {
-    const limited = data.meals.slice(0, 12);
-    const detailed = await Promise.all(
-      limited.map(async (m) => {
-        const r = await fetch(`${base}/lookup.php?i=${m.idMeal}`, { next: { revalidate: 60 } });
-        const d = await r.json();
-        return d.meals ? d.meals[0] : null;
-      })
-    );
-    return { meals: detailed.filter(Boolean), matchedBy: "ingredient" };
-  }
-
-  // Stage 4: area/cuisine search (e.g. "Indian", "Italian", "Mexican")
-  res = await fetch(`${base}/filter.php?a=${encodeURIComponent(query)}`, { next: { revalidate: 60 } });
-  data = await res.json();
-  if (data.meals && data.meals.length > 0) {
-    const limited = data.meals.slice(0, 12);
-    const detailed = await Promise.all(
-      limited.map(async (m) => {
-        const r = await fetch(`${base}/lookup.php?i=${m.idMeal}`, { next: { revalidate: 60 } });
-        const d = await r.json();
-        return d.meals ? d.meals[0] : null;
-      })
-    );
-    return { meals: detailed.filter(Boolean), matchedBy: "area" };
-  }
-
-  // Stage 5: first-letter with strict client-side filter (no generic dumps)
-  const firstLetter = query.trim()[0]?.toLowerCase();
-  if (firstLetter && /[a-z]/.test(firstLetter)) {
-    res = await fetch(`${base}/search.php?f=${firstLetter}`, { next: { revalidate: 60 } });
-    data = await res.json();
-    if (data.meals && data.meals.length > 0) {
-      const lowerQuery = query.toLowerCase();
-      const filtered = data.meals.filter(m => {
-        const haystack = [m.strMeal, m.strCategory, m.strArea, m.strTags]
-          .filter(Boolean).join(" ").toLowerCase();
-        return haystack.includes(lowerQuery);
-      });
-      if (filtered.length > 0) return { meals: filtered.slice(0, 12), matchedBy: "letter-filter" };
-    }
+  if (meals.length > 0) {
+    return { meals: meals.slice(0, 24), matchedBy: "universal-search" };
   }
 
   return { meals: [], matchedBy: "none" };
