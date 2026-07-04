@@ -25,7 +25,7 @@ yarn dev
 pnpm dev
 # or
 bun dev
-Open http://localhost:3000 with your browser to see the result. You can start editing the page by modifying app/page.js.
+Open https://smart-meal-planner-2-0-delta.vercel.app  with your browser to see the result. You can start editing the page by modifying app/page.js.
 
 🌐 Deployment
 The application is fully deployed and hosted on the Vercel Platform. Any updates pushed to the main branch automatically trigger continuous deployment pipelines.
